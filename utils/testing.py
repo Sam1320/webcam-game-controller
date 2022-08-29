@@ -4,6 +4,8 @@ import torchvision.transforms as transforms
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import gym
+
 from train import DQN, print_accuracy
 
 
@@ -104,6 +106,32 @@ def realtime_labelling(model):
         prediction = model_predict(model, im, raw=True)
         cv2.putText(im, prediction, (250, 250), font, 1, (0, 255, 0), 3)
         cv2.imshow('check this out!', im)
+        if cv2.waitKey(10) & 0xFF == ord('q'):
+            cap.release()
+            cv2.destroyAllWindows()
+            break
+
+def run_system(model=None):
+    action_mappings = {'left': 0, 'right': 2, 'wait': 1}
+    env = gym.make('MountainCar-v0', new_step_api=True, render_mode='human')
+    env.reset()
+    done = False
+    cap = cv2.VideoCapture(0)
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    model.eval()
+    while not done and cap.isOpened():
+        ret, frame = cap.read()
+        im = np.array(frame)
+        im_processed, prediction = model_predict(model, im, raw=True)
+        im_processed = cv2.resize(im_processed, (im.shape[1], im.shape[0]))
+        cv2.putText(im, prediction, (250, 250), font, 1, (0, 255, 0), 3)
+        cv2.imshow('original', im)
+        cv2.imshow('processed', im_processed)
+
+        action = action_mappings[prediction]
+        result = env.step(action)
+        done = result[3]
+        env.render()
         if cv2.waitKey(10) & 0xFF == ord('q'):
             cap.release()
             cv2.destroyAllWindows()
