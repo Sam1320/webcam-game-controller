@@ -1,0 +1,116 @@
+import os
+import torch
+import torchvision.transforms as transforms
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+from train import DQN, print_accuracy
+
+
+import env
+from utils import preprocessing
+
+# todo: needs to be integrated in model pipeline
+transform = transforms.Normalize([0.5], [0.5])
+
+
+def test_examples(model):
+    train_images = ['/home/sam/Code/motorai_challenge/images/processed/left/left_12.jpg',
+                    '/home/sam/Code/motorai_challenge/images/processed/right/right_12.jpg',
+                    '/home/sam/Code/motorai_challenge/images/processed/wait/wait_12.jpg']
+
+    realtime_images = ['/home/sam/Code/motorai_challenge/left.jpg',
+                       '/home/sam/Code/motorai_challenge/right.jpg',
+                       '/home/sam/Code/motorai_challenge/wait.jpg']
+
+    test_images = ["/home/sam/Code/motorai_challenge/images/processed_test/left/left_0.jpg",
+                   "/home/sam/Code/motorai_challenge/images/processed_test/right/right_17.jpg",
+                   "/home/sam/Code/motorai_challenge/images/processed_test/wait/wait_190.jpg"]
+    fig, axarr = plt.subplots(3, 3)
+    for ax, filename in zip(axarr[0], train_images):
+        im = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
+        prediction = model_predict(model, im)
+        ax.imshow(im)
+        ax.title.set_text(f"(train) {prediction}")
+    for ax, filename in zip(axarr[1], test_images):
+        im = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
+        prediction = model_predict(model, im)
+        ax.imshow(im)
+        ax.title.set_text(f"(test) {prediction}")
+    for ax, filename in zip(axarr[2], realtime_images):
+        im = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
+        prediction = model_predict(model, im)
+        ax.imshow(im)
+        ax.title.set_text(f"(real-time) {prediction}")
+    plt.show()
+
+
+def plot_n_images_with_prediction(rows, cols, folder, model):
+    n = rows*cols
+    files = list(os.listdir(folder))[:n]
+    fig, axarr = plt.subplots(rows, cols, figsize=(20,20))
+    fig.suptitle(f"folder = {folder}")
+    for row in range(rows):
+        for col in range(cols):
+            filename = files.pop()
+            im = cv2.imread(os.path.join(folder, filename), cv2.IMREAD_GRAYSCALE)
+            assert im is not None
+            prediction = model_predict(model, im)
+            axarr[row][col].imshow(im)
+            axarr[row][col].title.set_text({prediction})
+    plt.show()
+
+
+def take_and_store_img(filepath):
+    cap = cv2.VideoCapture(0)
+    ret, frame = cap.read()
+    im = np.array(frame)
+    im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+    im_processed = preprocessing.process_image(im)
+    cv2.imwrite(filepath, im_processed)
+    cap.release()
+    cv2.destroyAllWindows()
+
+
+def model_predict(model, im, raw=False):
+    if raw:
+        im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
+        im = preprocessing.process_image(im, )
+    actions = ['left', 'right', 'wait']
+    im_tensor = torch.from_numpy(im.astype(np.float32)).unsqueeze(0).unsqueeze(0)
+    im_normalized = transform(im_tensor)
+    with torch.no_grad():
+        outputs = model(im_normalized)
+        _, predicted = torch.max(outputs.data, 1)
+        if raw:
+            return im, actions[predicted]
+        return actions[predicted]
+
+
+def record_samples():
+    for i in ['left', 'right', 'wait']:
+        input(f"press enter to take image of action = {i}:")
+        filepath = f"{env.base_path}/{i}.jpg"
+        take_and_store_img(filepath)
+
+
+def realtime_labelling(model):
+    cap = cv2.VideoCapture(0)
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    model.eval()
+    while cap.isOpened():
+        ret, frame = cap.read()
+        im = np.array(frame)
+        prediction = model_predict(model, im, raw=True)
+        cv2.putText(im, prediction, (250, 250), font, 1, (0, 255, 0), 3)
+        cv2.imshow('check this out!', im)
+        if cv2.waitKey(10) & 0xFF == ord('q'):
+            cap.release()
+            cv2.destroyAllWindows()
+            break
+
+
+if __name__ == "__main__":
+    model = DQN()
+    model.load_state_dict(torch.load(os.path.join(env.models_path, 'cnn_v1.pt')))
+    realtime_labelling(model)
