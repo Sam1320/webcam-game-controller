@@ -6,8 +6,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import gym
 
-
-
 import env
 from utils import preprocessing
 
@@ -102,9 +100,11 @@ def realtime_labelling(model):
     while cap.isOpened():
         ret, frame = cap.read()
         im = np.array(frame)
-        im_proceesed, prediction = model_predict(model, im, raw=True)
+        im_processed, prediction = model_predict(model, im, raw=True)
+        im_processed = cv2.resize(im_processed, (im.shape[1], im.shape[0]))
         cv2.putText(im, prediction, (250, 250), font, 1, (0, 255, 0), 3)
-        cv2.imshow('check this out!', im)
+        cv2.imshow('original', im)
+        cv2.imshow('processed', im_processed)
         if cv2.waitKey(10) & 0xFF == ord('q'):
             cap.release()
             cv2.destroyAllWindows()
@@ -138,10 +138,3 @@ def run_system(model=None):
             cap.release()
             cv2.destroyAllWindows()
             break
-
-
-if __name__ == "__main__":
-    from train import CNNv2
-    model = CNNv2()
-    model.load_state_dict(torch.load(os.path.join(env.models_path, 'cnnv2.pt')))
-    realtime_labelling(model)

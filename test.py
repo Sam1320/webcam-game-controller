@@ -15,16 +15,20 @@ y_test = torch.from_numpy(y_test).type(torch.long)
 transform = transforms.Normalize([0.5], [0.5])
 x_test = transform(x_test)
 
-# batch_size = len(x_test) - 1
 batch_size = 1
 testset = TensorDataset(x_test, y_test)
 testloader = DataLoader(testset, batch_size=batch_size, shuffle=True)
 
-
-# models = {'cnnv0_16.pt': 16, 'cnnv1_4.pt': 4, 'cnnv1_8.pt': 8, 'cnnv1_16.pt': 16}
-models = {'cnnv2.pt': 4}
+models = {'cnnv1_4.pt': 4, 'cnnv1_8.pt': 8, 'cnnv1_16.pt': 16,  'cnnv2_3.pt': 3}
 for model_name in models:
-    model = CNNv2()
+    arch = model_name.split("_")[0]
+    nodes = models[model_name]
+    if arch == 'cnnv1':
+        model = CNNv1(n_kernels=nodes)
+    elif arch == 'cnnv2':
+        model = CNNv2()
+    else:
+        raise ValueError(f"{model_name} is not a valid model name.")
     model.load_state_dict(torch.load(os.path.join(env.models_path, model_name)))
     model.eval()
     calculate_accuracy(testloader, model, verbose=True)

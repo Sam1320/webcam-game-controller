@@ -18,7 +18,7 @@ def resize(im, shape=(64, 64)):
 
 
 def black_white(im):
-    return cv2.adaptiveThreshold(im, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 63, -20)
+    return cv2.adaptiveThreshold(im, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 63, -30)
 
 
 def plot_images(im_list, titles=None):
@@ -54,6 +54,7 @@ def add_test_to_train():
     else:
         print("Aborted.")
 
+
 def process_frames(src_folder, dst_folder):
     prefix = os.path.split(src_folder)[1]
     for i, filename in enumerate(os.listdir(src_folder)):
@@ -62,7 +63,3 @@ def process_frames(src_folder, dst_folder):
         im_processed = process_image(im)
         new_filename = f"{prefix}_{i}.jpg"
         cv2.imwrite(os.path.join(dst_folder, new_filename), im_processed)
-
-
-if __name__ == "__main__":
-    add_test_to_train()

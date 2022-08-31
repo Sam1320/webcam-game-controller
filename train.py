@@ -1,13 +1,9 @@
 import os.path
 
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
-import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import TensorDataset, DataLoader
-
+from models.models import *
 import numpy as np
 from tqdm import tqdm
 
@@ -16,6 +12,7 @@ from utils.create_dataset import create_dataset
 
 
 def calculate_accuracy(data_loader, model, verbose=False):
+    # https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html#:~:text=the%20whole%20dataset.-,correct%20%3D%200,-total%20%3D%200
     correct = 0
     total = 0
     # since we're not training, we don't need to calculate the gradients for our outputs
@@ -37,6 +34,7 @@ def calculate_accuracy(data_loader, model, verbose=False):
 
 
 def train_model(model, criterion, optimizer, trainloader, epochs, verbose=False):
+    # https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html#:~:text=network%20and%20optimize.-,for%20epoch,-in%20range(
     for epoch in range(epochs):  # loop over the dataset multiple times
         running_loss = 0.0
         for i, (inputs, labels) in enumerate(trainloader):
@@ -52,88 +50,6 @@ def train_model(model, criterion, optimizer, trainloader, epochs, verbose=False)
 
         if epoch % 2 == 0 and verbose:
             print(f'epoch = {epoch} | loss: {running_loss / i}')
-
-
-class CNNv1(nn.Module):
-    def __init__(self, input_height=64, input_width=64, outputs=3, n_kernels=16, kernel_size=5, stride=2):
-        super().__init__()
-        self.conv1 = nn.Conv2d(1,  n_kernels, kernel_size=kernel_size, stride=stride)
-        self.bn1 = nn.BatchNorm2d(n_kernels)
-        self.conv2 = nn.Conv2d(n_kernels, 32, kernel_size=kernel_size, stride=stride)
-        self.bn2 = nn.BatchNorm2d(32)
-        self.conv3 = nn.Conv2d(32, 32, kernel_size=kernel_size, stride=stride)
-        self.bn3 = nn.BatchNorm2d(32)
-
-        # compute output of convolutional layers
-        def conv2d_size_out(size, kernel_size=kernel_size, stride=stride):
-            return (size - (kernel_size - 1) - 1) // stride + 1
-
-        conv_width = conv2d_size_out(conv2d_size_out(conv2d_size_out(input_width)))
-        conv_height = conv2d_size_out(conv2d_size_out(conv2d_size_out(input_height)))
-        linear_input_size = conv_width*conv_height*32
-        self.head = nn.Linear(linear_input_size, outputs)
-
-    # Called with either one element to determine next action, or a batch during optimization
-    def forward(self, x):
-        x = F.relu(self.bn1(self.conv1(x)))
-        x = F.relu(self.bn2(self.conv2(x)))
-        x = F.relu(self.bn3(self.conv3(x)))
-        return self.head(x.view(x.size(0), -1))
-
-
-class CNNv2(nn.Module):
-    def __init__(self, input_height=64, input_width=64, outputs=3, n_kernels=3, kernel_size=3, stride=2):
-        super().__init__()
-        self.conv1 = nn.Conv2d(1, 3, kernel_size=kernel_size, stride=stride)
-        self.bn = nn.BatchNorm2d(3)
-        self.conv2 = nn.Conv2d(3, 4, kernel_size=kernel_size, stride=stride)
-        self.conv3 = nn.Conv2d(4, 4, kernel_size=kernel_size, stride=stride)
-
-        # compute output of convolutional layers
-        def conv2d_size_out(size, kernel_size=kernel_size, stride=stride):
-            return (size - (kernel_size - 1) - 1) // stride + 1
-
-        conv_width = conv2d_size_out(conv2d_size_out(conv2d_size_out(input_width)))
-        conv_height = conv2d_size_out(conv2d_size_out(conv2d_size_out(input_height)))
-        linear_input_size = conv_width * conv_height * 4
-        self.head = nn.Linear(linear_input_size, outputs)
-
-    # Called with either one element to determine next action, or a batch during optimization
-    def forward(self, x):
-        x = F.relu(self.bn(self.conv1(x)))
-        x = F.relu(self.conv2(x))
-        x = F.relu(self.conv3(x))
-        return self.head(x.view(x.size(0), -1))
-
-
-class NNv1(nn.Module):
-    def __init__(self, n_hidden=128):
-        super(NNv1, self).__init__()
-        self.fc1 = nn.Linear(64 * 64, n_hidden)
-        self.fc2 = nn.Linear(n_hidden, 3)
-
-    def forward(self, x):
-        x = torch.flatten(x, 1)
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        output = F.log_softmax(x, dim=1)
-        return output
-
-
-class NNv2(nn.Module):
-    def __init__(self, n_hidden=128):
-        super(NNv2, self).__init__()
-        self.fc1 = nn.Linear(64 * 64, n_hidden)
-        self.fc2 = nn.Linear(n_hidden, 64)
-        self.fc3 = nn.Linear(64, 3)
-
-    def forward(self, x):
-        x = torch.flatten(x, 1)
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = F.relu(self.fc3(x))
-        output = F.log_softmax(x, dim=1)
-        return output
 
 
 def run_experiment(model, epochs, batch_size, save=False, verbose=False, model_name=None):
@@ -177,29 +93,25 @@ if __name__ == "__main__":
     transform = transforms.Normalize([0.5], [0.5])
     x_train = transform(x_train)
     x_test = transform(x_test)
-
     n_exp = 100
     n_epochs = 10
     batch_size = 32
-    # model_names = {'cnnv1': [4, 8, 16]} #,
-    model_names =  {'cnnv2': [4]}
-    # {'nnv1': [2, 4, 8, 16, 32, 64, 128], 'nnv2': [2, 4, 8, 16, 32, 64, 128],
+    model_names = {'nnv1': [2, 4, 8, 16, 32, 64, 128], 'nnv2': [2, 4, 8, 16, 32, 64, 128],
+                   'cnnv1': [4, 8, 16], 'cnnv2': [3]}
     for model_name in model_names:
         for nodes in model_names[model_name]:
             if model_name == 'nnv1':
                 model = NNv1(n_hidden=nodes)
-
             elif model_name == 'nnv2':
                 model = NNv2(n_hidden=nodes)
             elif model_name == 'cnnv1':
                 model = CNNv1(n_kernels=nodes)
             elif model_name == 'cnnv2':
                 model = CNNv2()
+            else:
+                raise ValueError(f"{model_name} is not a valid model name.")
             n_params = count_parameters(model)
             print(f"model {model_name}_{nodes} has {n_params} trainable parameters")
-
-
-
     print(f"Training samples = {len(x_train)}")
     print(f"Validation samples = {len(x_test)}")
 
@@ -217,7 +129,6 @@ if __name__ == "__main__":
                     model = CNNv1(n_kernels=n_nodes)
                 else:
                     model = CNNv2()
-
                 train_acc, test_acc = run_experiment(model=model, epochs=n_epochs, batch_size=batch_size, save=False,
                                                      verbose=False, model_name=model_name)
                 train_accs.append(train_acc)
