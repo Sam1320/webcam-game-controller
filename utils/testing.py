@@ -6,7 +6,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import gym
 
-from train import DQN, print_accuracy
 
 
 import env
@@ -103,7 +102,7 @@ def realtime_labelling(model):
     while cap.isOpened():
         ret, frame = cap.read()
         im = np.array(frame)
-        prediction = model_predict(model, im, raw=True)
+        im_proceesed, prediction = model_predict(model, im, raw=True)
         cv2.putText(im, prediction, (250, 250), font, 1, (0, 255, 0), 3)
         cv2.imshow('check this out!', im)
         if cv2.waitKey(10) & 0xFF == ord('q'):
@@ -111,15 +110,15 @@ def realtime_labelling(model):
             cv2.destroyAllWindows()
             break
 
+
 def run_system(model=None):
     action_mappings = {'left': 0, 'right': 2, 'wait': 1}
     env = gym.make('MountainCar-v0', new_step_api=True, render_mode='human')
     env.reset()
-    done = False
     cap = cv2.VideoCapture(0)
     font = cv2.FONT_HERSHEY_SIMPLEX
     model.eval()
-    while not done and cap.isOpened():
+    while True and cap.isOpened():
         ret, frame = cap.read()
         im = np.array(frame)
         im_processed, prediction = model_predict(model, im, raw=True)
@@ -129,8 +128,11 @@ def run_system(model=None):
         cv2.imshow('processed', im_processed)
 
         action = action_mappings[prediction]
-        result = env.step(action)
-        done = result[3]
+        state = env.step(action)[0]
+        position = state[0]
+        done = position >= 0.5
+        if done:
+            env.reset()
         env.render()
         if cv2.waitKey(10) & 0xFF == ord('q'):
             cap.release()
@@ -139,6 +141,7 @@ def run_system(model=None):
 
 
 if __name__ == "__main__":
-    model = DQN()
-    model.load_state_dict(torch.load(os.path.join(env.models_path, 'cnn_v1.pt')))
+    from train import CNNv2
+    model = CNNv2()
+    model.load_state_dict(torch.load(os.path.join(env.models_path, 'cnnv2.pt')))
     realtime_labelling(model)

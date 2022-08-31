@@ -22,7 +22,6 @@ def load_images(processed_imgs_path):
             x[file_idx, :, :] = x_tmp
             y[file_idx] = label
             file_idx += 1
-        print(f"done with folder {folder}")
     return x, y
 
 

@@ -1,17 +1,11 @@
 import os
-from train import DQN, print_accuracy
+from train import CNNv1, CNNv2, calculate_accuracy
 from utils.create_dataset import create_dataset
 import env
 import torch
 import numpy as np
 import torchvision.transforms as transforms
 from torch.utils.data import TensorDataset, DataLoader
-import matplotlib.pyplot as plt
-import cv2
-
-model = DQN()
-model.load_state_dict(torch.load(os.path.join(env.models_path, 'cnn_v1.pt')))
-model.eval()
 
 test_imgs_path = f"{env.images_processed_path}_test"
 _, _, x_test, y_test = create_dataset(train_split=0, processed_imgs_path=test_imgs_path)
@@ -26,5 +20,11 @@ batch_size = 1
 testset = TensorDataset(x_test, y_test)
 testloader = DataLoader(testset, batch_size=batch_size, shuffle=True)
 
-print_accuracy(testloader, model)
-print()
+
+# models = {'cnnv0_16.pt': 16, 'cnnv1_4.pt': 4, 'cnnv1_8.pt': 8, 'cnnv1_16.pt': 16}
+models = {'cnnv2.pt': 4}
+for model_name in models:
+    model = CNNv2()
+    model.load_state_dict(torch.load(os.path.join(env.models_path, model_name)))
+    model.eval()
+    calculate_accuracy(testloader, model, verbose=True)
