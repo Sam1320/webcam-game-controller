@@ -14,17 +14,17 @@ transform = transforms.Normalize([0.5], [0.5])
 
 
 def test_examples(model):
-    train_images = ['/home/sam/Code/motorai_challenge/images/processed/left/left_12.jpg',
-                    '/home/sam/Code/motorai_challenge/images/processed/right/right_12.jpg',
-                    '/home/sam/Code/motorai_challenge/images/processed/wait/wait_12.jpg']
+    train_images = ['images/processed/left/left_12.jpg',
+                    'images/processed/right/right_12.jpg',
+                    'images/processed/wait/wait_12.jpg']
 
-    realtime_images = ['/home/sam/Code/motorai_challenge/left.jpg',
-                       '/home/sam/Code/motorai_challenge/right.jpg',
-                       '/home/sam/Code/motorai_challenge/wait.jpg']
+    realtime_images = ['/home/sam/Code/webcam_game_controller/left.jpg',
+                       '/home/sam/Code/webcam_game_controller/right.jpg',
+                       '/home/sam/Code/webcam_game_controller/wait.jpg']
 
-    test_images = ["/home/sam/Code/motorai_challenge/images/processed_test/left/left_0.jpg",
-                   "/home/sam/Code/motorai_challenge/images/processed_test/right/right_17.jpg",
-                   "/home/sam/Code/motorai_challenge/images/processed_test/wait/wait_190.jpg"]
+    test_images = ["images/processed_test/left/left_0.jpg",
+                   "images/processed_test/right/right_17.jpg",
+                   "images/processed_test/wait/wait_190.jpg"]
     fig, axarr = plt.subplots(3, 3)
     for ax, filename in zip(axarr[0], train_images):
         im = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
@@ -113,7 +113,7 @@ def realtime_labelling(model):
 
 def run_system(model=None):
     action_mappings = {'left': 0, 'right': 2, 'wait': 1}
-    env = gym.make('MountainCar-v0', new_step_api=True, render_mode='human')
+    env = gym.make('MountainCar-v0', render_mode='human')
     env.reset()
     cap = cv2.VideoCapture(0)
     font = cv2.FONT_HERSHEY_SIMPLEX
