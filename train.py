@@ -45,7 +45,6 @@ def train_model(model, criterion, optimizer, trainloader, epochs, verbose=False)
             loss = criterion(outputs, labels)
             loss.backward()
             optimizer.step()
-            # print statistics
             running_loss += loss.item()
 
         if epoch % 2 == 0 and verbose:
