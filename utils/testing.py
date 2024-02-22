@@ -123,7 +123,10 @@ def run_system(model=None):
         im = np.array(frame)
         im_processed, prediction = model_predict(model, im, raw=True)
         im_processed = cv2.resize(im_processed, (im.shape[1], im.shape[0]))
-        cv2.putText(im, prediction, (250, 250), font, 1, (0, 255, 0), 3)
+        text_size, _ = cv2.getTextSize(prediction, font, 5, 3)
+        text_x = (im.shape[1] - text_size[0]) // 2
+        text_y = (im.shape[0] + text_size[1]) // 2
+        cv2.putText(im, prediction, (text_x, text_y), font, 5, (0, 255, 0), 3)
         cv2.imshow('original', im)
         cv2.imshow('processed', im_processed)
 

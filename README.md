@@ -1,11 +1,12 @@
 # Webcam Game Controller
 
-This is a simple system that uses a webcam and a *very small* neural network to control a game in realtime. No pre-trained models or any other data is used. All the design, data collection, data processing, and training is done from scratch.
+This is a simple system that uses a webcam and a *very small* neural network to control a game in realtime. No pre-trained models or any other data is used. *All is done from scratch* and the end model *has just ~800 weights!* ⚡️
 
+![demo](demo.gif)
 
+This project was developed as a part of a challenge. The final [project report](notebooks/project_report.ipynb) summarizes the full process of developing the system.
 
-
-This project was developed as a part of a challenge. The final [project report](notebooks/project_report.ipynb) summarizes the full process of developing the system. The final result can be seen in the [demo video](webcam_game_controller/demo.mp4).
+But here's a quick overview. 😊
 
 ## Running The System
 
