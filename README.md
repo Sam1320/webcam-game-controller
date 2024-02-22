@@ -1,6 +1,8 @@
 # Webcam Game Controller
 
-This is a simple system that uses a webcam and a *very small* neural network to control a game in realtime. No pre-trained models or any other data is used. *All is done from scratch* and the end model *has just ~800 weights!* ⚡️
+This is a simple system that uses a webcam and a *very small* neural network to control a game in realtime. No pre-trained models or any other data is used. 
+
+*All is done from scratch* and the end model *has just ~800 weights or ~7KB!* ⚡️
 
 ![demo](demo.gif)
 
