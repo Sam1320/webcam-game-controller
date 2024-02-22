@@ -193,3 +193,90 @@ class CNNv2(nn.Module):
         x = F.relu(self.conv3(x))
         return self.head(x.view(x.size(0), -1))
 ```
+
+## Data Collection
+
+
+A video for each gesture is recorded, then labeling is just a matter of extracting the frames and placing them in a folder with the label's name.
+
+Notice how this approach bypasses the naive method of manually going through each frame and labeling it.
+
+Once we have the images creating a dataset requires just processing them:
+```python
+# utils/preprocessing.py
+def process_frames(src_folder, dst_folder):
+    prefix = os.path.split(src_folder)[1]
+    for i, filename in enumerate(os.listdir(src_folder)):
+        im_path = os.path.join(src_folder, filename)
+        im = cv2.imread(im_path, cv2.IMREAD_GRAYSCALE)
+        im_processed = process_image(im)
+        new_filename = f"{prefix}_{i}.jpg"
+        cv2.imwrite(os.path.join(dst_folder, new_filename), im_processed)
+...
+# process_frames.py
+for src_folder, dst_folder in tqdm(zip(src_folders, dst_folders)):
+    preprocessing.process_frames(src_folder, dst_folder)
+```
+Loading them:
+```python
+# create_dataset.py
+def load_images(processed_imgs_path):
+    folders = ["left", "right", "wait"]
+    n_files = sum([len(os.listdir(os.path.join(processed_imgs_path, folder))) for folder in folders])
+    x = np.zeros((n_files, 64, 64, 1))
+    y = np.zeros(n_files)
+    file_idx = 0
+    for label, folder in enumerate(folders):
+        folder_path = os.path.join(processed_imgs_path, folder)
+        for file in os.listdir(folder_path):
+            filename = os.path.join(folder_path, file)
+            x_tmp = cv2.imread(filename, cv2.IMREAD_GRAYSCALE)
+            x_tmp = np.expand_dims(x_tmp, axis=2)
+            x[file_idx, :, :] = x_tmp
+            y[file_idx] = label
+            file_idx += 1
+    return x, y
+```
+
+And spliting them into train and test sets:
+```python
+# create_dataset.py
+def create_dataset(processed_imgs_path, train_split=0.8):
+    x, y = load_images(processed_imgs_path=processed_imgs_path)
+    n_train_samples = math.floor(len(x) * train_split)
+    indexes = np.array(range(len(x)))
+    np.random.shuffle(indexes)
+
+    train_idx = indexes[:n_train_samples]
+    test_idx = indexes[n_train_samples:]
+
+    x_train = x[train_idx, :, :]
+    y_train = y[train_idx]
+
+    x_test = x[test_idx, :, :]
+    y_test = y[test_idx]
+
+    assert len(x_test)+len(x_train) == len(x)
+    return x_train, y_train, x_test, y_test
+```
+
+## Training
+The training code can be found in the [train.py](train.py) file. It contains the logic for the different experiments that were run to find the best model. In a nutshell it boils down to:
+
+```python
+def train_model(model, criterion, optimizer, trainloader, epochs, verbose=False):
+    for epoch in range(epochs):
+        running_loss = 0.0
+        for i, (inputs, labels) in enumerate(trainloader):
+            # zero the parameter gradients
+            optimizer.zero_grad()
+            # forward + backward + optimize
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)
+            loss.backward()
+            optimizer.step()
+            running_loss += loss.item()
+        if epoch % 2 == 0 and verbose:
+            print(f'epoch = {epoch} | loss: {running_loss / i}')
+```
+Where the `model` is the neural network, `criterion` is the loss function, `optimizer` is the optimization algorithm, `trainloader` is just a wrapper around the dataset that allows us to iterate over it efficiently, and `epochs` is the number of times the model will see the whole dataset.

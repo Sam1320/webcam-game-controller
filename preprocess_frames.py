@@ -1,5 +1,5 @@
-from tqdm import tqdm
 import env
+from tqdm import tqdm
 from utils import preprocessing
 
 if __name__ == "__main__":
