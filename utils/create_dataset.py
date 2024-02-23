@@ -42,6 +42,3 @@ def create_dataset(processed_imgs_path, train_split=0.8):
 
     assert len(x_test)+len(x_train) == len(x)
     return x_train, y_train, x_test, y_test
-
-
-

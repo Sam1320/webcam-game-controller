@@ -4,9 +4,9 @@ import numpy as np
 import torch
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader, TensorDataset
+from train import CNNv1, CNNv2, calculate_accuracy
 
 import env
-from train import CNNv1, CNNv2, calculate_accuracy
 from utils.create_dataset import create_dataset
 
 test_imgs_path = f"{env.images_processed_path}_test"
