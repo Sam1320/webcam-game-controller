@@ -4,7 +4,7 @@ This is a simple system that uses a webcam and a *very small* neural network to 
 
 *All is done from scratch* and the end model *has just ~800 weights or ~7KB!* ⚡️
 
-![demo](demo.gif)
+![demo](videos/demo.gif)
 
 This project was developed as a part of a challenge. The final [project report](notebooks/project_report.ipynb) summarizes the full process of developing the system.
 
@@ -197,6 +197,7 @@ And we use relu as the activation function.
 This adds up to just 887 parameters to be learned, which weights just 7KB.
 
 ```python
+# models/models.py
 class CNNv2(nn.Module):
     def __init__(self, input_height=64, input_width=64, outputs=3, n_kernels=(3, 4, 4), kernel_size=3, stride=2):
         super().__init__()
@@ -241,13 +242,13 @@ def process_frames(src_folder, dst_folder):
         new_filename = f"{prefix}_{i}.jpg"
         cv2.imwrite(os.path.join(dst_folder, new_filename), im_processed)
 ...
-# process_frames.py
+# scripts/preprocess_frames.py
 for src_folder, dst_folder in tqdm(zip(src_folders, dst_folders)):
     preprocessing.process_frames(src_folder, dst_folder)
 ```
 Loading them:
 ```python
-# create_dataset.py
+# utils/create_dataset.py
 def load_images(processed_imgs_path):
     folders = ["left", "right", "wait"]
     n_files = sum([len(os.listdir(os.path.join(processed_imgs_path, folder))) for folder in folders])
@@ -268,7 +269,7 @@ def load_images(processed_imgs_path):
 
 And spliting them into train and test sets:
 ```python
-# create_dataset.py
+# utils/create_dataset.py
 def create_dataset(processed_imgs_path, train_split=0.8):
     x, y = load_images(processed_imgs_path=processed_imgs_path)
     n_train_samples = math.floor(len(x) * train_split)
@@ -289,7 +290,7 @@ def create_dataset(processed_imgs_path, train_split=0.8):
 ```
 
 ## Training
-The training code can be found in the [train.py](train.py) file. It contains the logic for the different experiments that were run to find the best model. In a nutshell it boils down to:
+The training code can be found in the [train.py](scripts/train.py) file. It contains the logic for the different experiments that were run to find the best model. In a nutshell it boils down to:
 
 ```python
 def train_model(model, criterion, optimizer, trainloader, epochs, verbose=False):
