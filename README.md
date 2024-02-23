@@ -10,11 +10,36 @@ This project was developed as a part of a challenge. The final [project report](
 
 But here's a quick overview. 😊
 
-## Running The System
+## Table of Contents
+- [Running The System](#running-the-system)
+- [System Overview In A Nutshell](#system-overview-in-a-nutshell)
+  * [main.py](#mainpy)
+  * [Inside run_system](#inside-run_system)
+- [Data Processing](#data-processing)
+- [Model](#model)
+- [Data Collection](#data-collection)
+- [Training](#training)
 
+## Running The System
+I would strongly recommend using the amazing [uv](https://astral.sh/blog/uv) python package manager to install the dependencies, its a drop-in replacement for pip and venv from the creators of [ruff](https://astral.sh/ruff).
+
+Your mind will be blown by how fast it is. 🔥
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+uv venv venv
+source venv/bin/activate
+uv pip compile requirements.in -o requirements.txt
+uv pip install -r requirements.txt
+python main.py
 ```
+
+If you don't want to use uv, you can just use pip and venv as usual.
+```bash
 python -m venv venv
 source venv/bin/activate
+pip install pip-tools
+pip-compile requirements.in -o requirements.txt
 pip install -r requirements.txt
 python main.py
 ```
