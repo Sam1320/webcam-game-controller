@@ -44,6 +44,15 @@ pip install -r requirements.txt
 python main.py
 ```
 
+You will see 3 windows pop up: 
+- The game loop.
+- The webcam's feed with the model's prediction overlayed.
+- What the model is seeing after preprocessing.
+
+You can resize & place them however you find it best.
+
+Note: The system works best when there is a clear contrast between the background and the gestures (e.g. a uniform dark T-shirt will work better as background than a clear or striped one). This is something that can be tuned in the adaptive thresholding step, PR's with improvements are welcomed!
+
 ## System Overview In A Nutshell
 
 ### main.py
