@@ -1,13 +1,15 @@
 import os.path
 
+import numpy as np
+import torch
+import torch.nn as nn
 import torch.optim as optim
 import torchvision.transforms as transforms
-from torch.utils.data import TensorDataset, DataLoader
-from models.models import *
-import numpy as np
+from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
 import env
+from models.models import CNNv1, CNNv2, NNv1, NNv2
 from utils.create_dataset import create_dataset
 
 
@@ -26,7 +28,7 @@ def calculate_accuracy(data_loader, model, verbose=False):
             total += labels.size(0)
             correct += (predicted == labels).sum().item()
             # todo: analyze per class accuracy
-            incorrect = predicted != labels
+            # incorrect = predicted != labels
     accuracy = 100 * correct // total
     if verbose:
         print(f'Accuracy of the network on the {total} images: {accuracy} %')
@@ -37,7 +39,7 @@ def train_model(model, criterion, optimizer, trainloader, epochs, verbose=False)
     # https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html#:~:text=network%20and%20optimize.-,for%20epoch,-in%20range(
     for epoch in range(epochs):  # loop over the dataset multiple times
         running_loss = 0.0
-        for i, (inputs, labels) in enumerate(trainloader):
+        for inputs, labels in trainloader:
             # zero the parameter gradients
             optimizer.zero_grad()
             # forward + backward + optimize
@@ -48,7 +50,7 @@ def train_model(model, criterion, optimizer, trainloader, epochs, verbose=False)
             running_loss += loss.item()
 
         if epoch % 2 == 0 and verbose:
-            print(f'epoch = {epoch} | loss: {running_loss / i}')
+            print(f'epoch = {epoch} | loss: {running_loss / len(trainloader)}')
 
 
 def run_experiment(model, epochs, batch_size, save=False, verbose=False, model_name=None):
@@ -66,7 +68,6 @@ def run_experiment(model, epochs, batch_size, save=False, verbose=False, model_n
     train_acc = calculate_accuracy(trainloader, model)
     test_acc = calculate_accuracy(testloader, model)
     if save:
-        n_models = len(os.listdir(env.models_path))
         path = os.path.join(env.models_path, f"{model_name}.pt")
         print(f"saving model in {path}")
         torch.save(model.state_dict(), path)
@@ -118,7 +119,7 @@ if __name__ == "__main__":
         for n_nodes in model_names[model_name]:
             train_accs = []
             test_accs = []
-            for i in tqdm(range(n_exp), position=0, leave=True):
+            for _ in tqdm(range(n_exp), position=0, leave=True):
                 # models need to be reset before each new experiment
                 if model_name == 'nnv1':
                     model = NNv1(n_hidden=n_nodes)

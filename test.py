@@ -1,11 +1,13 @@
 import os
+
+import numpy as np
+import torch
+import torchvision.transforms as transforms
+from torch.utils.data import DataLoader, TensorDataset
+
+import env
 from train import CNNv1, CNNv2, calculate_accuracy
 from utils.create_dataset import create_dataset
-import env
-import torch
-import numpy as np
-import torchvision.transforms as transforms
-from torch.utils.data import TensorDataset, DataLoader
 
 test_imgs_path = f"{env.images_processed_path}_test"
 _, _, x_test, y_test = create_dataset(train_split=0, processed_imgs_path=test_imgs_path)
