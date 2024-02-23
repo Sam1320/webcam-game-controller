@@ -58,7 +58,7 @@ class CNNv2(nn.Module):
 
 class NNv1(nn.Module):
     def __init__(self, n_hidden=128):
-        super(NNv1, self).__init__()
+        super().__init__()
         self.fc1 = nn.Linear(64 * 64, n_hidden)
         self.fc2 = nn.Linear(n_hidden, 3)
 
@@ -72,7 +72,7 @@ class NNv1(nn.Module):
 
 class NNv2(nn.Module):
     def __init__(self, n_hidden=128):
-        super(NNv2, self).__init__()
+        super().__init__()
         self.fc1 = nn.Linear(64 * 64, n_hidden)
         self.fc2 = nn.Linear(n_hidden, 64)
         self.fc3 = nn.Linear(64, 3)

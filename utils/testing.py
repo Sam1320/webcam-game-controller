@@ -1,10 +1,11 @@
 import os
+
+import cv2
+import gym
+import matplotlib.pyplot as plt
+import numpy as np
 import torch
 import torchvision.transforms as transforms
-import cv2
-import numpy as np
-import matplotlib.pyplot as plt
-import gym
 
 import env
 from utils import preprocessing
